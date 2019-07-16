@@ -3,7 +3,7 @@
 /**
  * 接口请求公共路径
  */
-const devOrigin = 'cross/' // 本地代理(nginx)
+const devOrigin = 'cross/admin/' // 本地代理(nginx)
 // const devOrigin = 'cross/admin/'
   // 正式环境动态获取域名
 export const Host = process.env.NODE_ENV === 'development' ? devOrigin : (window.location.origin + '/admin/')

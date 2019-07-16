@@ -1,13 +1,33 @@
 <template>
 <div class="menu__wrap">
-  <ul>
-    <li>
-      <div class="img">
-        <img src="@/assets/avatar.png" />
+  <el-row>
+    <el-col :span="8">
+      <div class="wrap">
+        <div class="img">
+          <img src="@/assets/avatar.png" />
+        </div>
+        <span>审核加工预约申请详情</span>
       </div>
-      <span @click="onClickToRoute('ProjectTableGraph')">创客空间数据面板</span>
-    </li>
-  </ul>
+    </el-col>
+    <el-col :span="8">
+      <div class="wrap">
+        <div class="img">
+          <img src="@/assets/avatar.png" />
+        </div>
+        <span>审核加工预约申请详情</span>
+      </div>
+    </el-col>
+    <el-col :span="8">
+      <div class="wrap">
+        <div class="img">
+          <img src="@/assets/avatar.png" />
+        </div>
+        <span>审核加工预约申请详情</span>
+      </div>
+    </el-col>
+    
+  </el-row>
+  
 </div>
 </template>
 
@@ -33,7 +53,7 @@ export default {
   background: #FCFDFF;
   font-size: 14px;
 
-  ul {
+  .el-row {
     padding: 0;
     margin: 0;
     &::after {
@@ -42,40 +62,44 @@ export default {
       visibility: hidden;
       clear: both;
     }
-    li {
-      &:nth-of-type(3n) {
-        margin-right: 0;
-      }
+    .el-col {
 
-      .img {
-        width: 48px;
-        height: 48px;
-        margin-right: 32px;
-        flex-basis: 48px;
-        
-        img {
-          width: 100%;
-          height: 100%;
-          display: block;
+      .wrap {
+        .img {
+          width: 48px;
+          height: 48px;
+          margin-right: 32px;
+          flex-basis: 48px;
+          
+          img {
+            width: 100%;
+            height: 100%;
+            display: block;
+          }
+        }
+
+        box-shadow: 0 9px 13px 0 rgba(31,92,157,0.08);
+        border-radius: 6px;
+        list-style: none;
+        // width: 100%;
+        max-width: 280px;
+        background: #fff;
+        padding: 10px 28px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        // margin: 20px 80px 20px 0;
+        margin: 20px 0;
+
+        span {
+          color: #1a1a1a;
+          flex-basis: 123px;
         }
       }
 
-      box-shadow: 0 9px 13px 0 rgba(31,92,157,0.08);
-      border-radius: 6px;
-      list-style: none;
-      width: 280px;
-      background: #fff;
-      padding: 10px 28px;
-      height: 80px;
-      display: flex;
-      align-items: center;
-      float: left;
-      margin: 20px 80px 20px 0;
+      cursor: pointer;
 
-      span {
-        color: #1a1a1a;
-        flex-basis: 123px;
-      }
+      
       
       
     }

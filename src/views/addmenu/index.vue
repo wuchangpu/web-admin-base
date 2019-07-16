@@ -32,6 +32,32 @@
         <el-button type="primary" @click="onClickSaveButton">确定</el-button>
       </el-form-item>
     </el-form>
+
+    <el-tree
+      :data="treeData"
+      :props="{ label: 'menuName', children: 'list' }"
+      node-key="menuId"
+      :expand-on-click-node="false"
+      @node-click="onClickNode"
+    />
+
+    <el-form :model="permissionData" label-width="120px">
+      <el-form-item label="权限标识">
+        <el-input v-model="permissionData.permsKey" />
+      </el-form-item>
+
+      <el-form-item label="权限名称">
+        <el-input v-model="permissionData.permsName" />
+      </el-form-item>
+
+      <el-form-item label="菜单ID">
+        <el-input v-model="permissionData.menuId" />
+      </el-form-item>
+
+      <el-form-item>
+        <el-button @click="onClickSavePermissionBtn">确定</el-button>
+      </el-form-item>
+    </el-form>
   </div>
 </template>
 
@@ -46,6 +72,14 @@ export default {
         menuType: '',
         url: '',
         icon: ''
+      },
+
+      treeData: [],
+
+      permissionData: {
+        permsKey: '',
+        permsName: '',
+        menuId: ''
       }
     }
     
@@ -60,6 +94,7 @@ export default {
       const res = await this.$post('getAllMenu');
       if(res.returnCode === '1000') {
         console.log(res);
+        this.treeData = res.dataInfo.menuList;
       } else {
         return this.$message.error(res.message);
       }
@@ -73,6 +108,21 @@ export default {
       } else {
         return this.$message.error(res.message);
       }
+    },
+
+    async onClickSavePermissionBtn () {
+      const res = await this.$post('addPermission', this.permissionData);
+
+      if(res.returnCode === '1000') {
+        this.$message.success('success');
+      } else {
+        return this.$message.error(res.message);
+      }
+    },
+
+    onClickNode (node) {
+      this.formData.parentId = node.menuId;
+      this.permissionData.menuId = node.menuId;
     }
   }
 }
