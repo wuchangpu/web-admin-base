@@ -1,41 +1,57 @@
 import Vue from 'vue'
+import md5 from 'md5'
 
 import 'normalize.css/normalize.css' // A modern alternative to CSS resets
 
-// import ElementUI from 'element-ui'
-import '@/utils/element-ui'
+import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
-// import locale from 'element-ui/lib/locale/lang/en' // lang i18n
+import locale from 'element-ui/lib/locale/lang/zh-CN' // lang i18n
+import deepCopy from '@/utils/deepcopy'
 
 import '@/styles/index.scss' // global css
 
 import App from './App'
 import store from './store'
 import router from './router'
-import Global from '@/utils/global'
-import Components from '@/Components'
-import { Base64 } from 'js-base64'
-import Loading from '@/utils/loading'
+import Components from '@/components'
 
+import API from '@/utils/request'
 
 import '@/icons' // icon
 import '@/permission' // permission control
 
-import directives from '@/directives'
+import { parseTime } from '@/utils'
 
-for (const [name, value] of Object.entries(directives)) {
-  Vue.directive(name, value)
+import permission from '@/directives/permission'
+
+import TreeInput from '@/components/TreeInput'
+
+/**
+ * If you don't want to use mock-server
+ * you want to use MockJs for mock api
+ * you can execute: mockXHR()
+ *
+ * Currently MockJs will be used in the production environment,
+ * please remove it before going online! ! !
+ */
+import { mockXHR } from '../mock'
+// import VueRouter from 'vue-router';
+if (process.env.NODE_ENV === 'production') {
+  mockXHR()
 }
 
-// Vue.use(ElementUI, { locale })
-// Vue.use(ElementUI)
-Vue.use(Global)
+// set ElementUI lang to EN
+Vue.use(ElementUI, { locale })
 Vue.use(Components)
-Vue.use(Loading)
-
+Vue.prototype.$api = API
+Vue.prototype.$deepcopy = deepCopy
+Vue.prototype.$md5 = md5
 Vue.config.productionTip = false
+Vue.directive('permission', permission)
 
-Vue.prototype.$base64 = Base64
+Vue.component('TreeInput', TreeInput)
+
+Vue.filter('parseTime', parseTime)
 
 new Vue({
   el: '#app',

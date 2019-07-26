@@ -1,291 +1,161 @@
 <template>
-<div class="system-dictionary-list">
-  <el-form :model="formData" label-width="120px" class="form">
-    <el-row>
-      <el-col :span="8">
-        <el-form-item label="字典名称：" prop="dicName">
-          <el-input v-model="formData.dicName" clearable @clear="onClearFormItem(formData, 'dicName')" />
-        </el-form-item>
-      </el-col>
+  <div class="layout__page">
+    <h2>字典列表</h2>
 
-      <el-col :span="8">
-        <el-form-item label="状态：" prop="deleted">
-          <el-select v-model="formData.deleted" clearable @clear="onClearFormItem(formData, 'deleted')">
-            <el-option label="启用" value="1" />
-            <el-option label="禁用" value="2" />
-          </el-select>
-        </el-form-item>
-      </el-col>
-    </el-row>
+    <div class="layout__filter-form">
+      <el-form :model="listFilter" label-width="100px" @submit.native.prevent="onSubmitForm">
+        <el-row>
+          <el-col :span="8">
+            <el-form-item label="字典名称：">
+              <el-input v-model="listFilter.dicName" />
+            </el-form-item>
+          </el-col>
 
-    <el-row>
-      <el-col :span="24" style="text-align: right;">
-        <el-form-item>
-          <el-button type="primary" size="mini" @click="onClickSearchBtn">搜索</el-button>
-        </el-form-item>
-      </el-col>
-    </el-row>
-  </el-form>
+          <el-col :span="8">
+            <el-form-item label="状态：">
+              <el-select v-model="listFilter.deleted">
+                <el-option label="启用" value="1" />
+                <el-option label="禁用" value="2" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
 
-  <div class="table__container">
-    <div class="btn_container" style="margin-bottom: 20px">
-      <el-button type="primary" size="mini" @click="onClickAddBtn">新增字典</el-button>
+        <el-row>
+          <el-col :span="12">
+            <el-button v-permission="'system:dictionary:add'" type="primary" @click="onClickAddBtn">新建</el-button>
+          </el-col>
+
+          <el-col :span="12" style="text-align: right;">
+            <el-button type="primary" native-type="submit" @click="onSubmitForm">搜索</el-button>
+            <el-button @click="onClickResetBtn">清除</el-button>
+          </el-col>
+        </el-row>
+      </el-form>
     </div>
 
-    <el-table
-      :data="tableData"
-      border
-      tooltip-effect="dark"
-      style="width: 100%"
-    >
-      <el-table-column type="selection" />
+    <div class="layout__table">
+      <h4 class="table__title">列表</h4>
 
-      <el-table-column prop="dicName" label="字典名称" min-width="200">
-        <template slot-scope="scope">
-          <router-link 
-            :to="{ name: 'SystemDictionaryDetail', query: { id: scope.row.id, dic_id: scope.row.dicCode } }" 
-            style="color: #66b1ff"
-          >
-            {{ scope.row.dicName }}
-          </router-link>
-        </template>
-      </el-table-column>
+      <el-table :data="tableData" stripe border style="width: 100%">
+        <el-table-column label="字典名称" prop="dicName" />
 
-      <el-table-column prop="dicCode" label="字典码" />
+        <el-table-column label="字典码" prop="dicCode" />
 
-      <el-table-column prop="deleted" label="状态">
-        <template slot-scope="scope">
-          <el-switch 
-            :active-text="'启用'"
-            :inactive-text="'禁用'"
-            :active-value="'1'"
-            :inactive-value="'2'"
-            :value="scope.row.deleted"
-            @change="onChangeStatus($event, scope.row.id,)"
-          />
-        </template>
-      </el-table-column>
+        <el-table-column label="状态" prop="deleted">
+          <template slot-scope="scope">
+            <el-switch
+              :value="scope.row.deleted"
+              active-value="1"
+              inactive-value="2"
+              @change="onChangeStatus($event, scope)"
+            />
+          </template>
+        </el-table-column>
 
-      <el-table-column label="操作">
-        <template slot-scope="scope">
-          <el-button type="text" @click="onClickEditBtn(scope)">编辑</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+        <el-table-column label="操作">
+          <template slot-scope="scope">
+            <el-button v-permission="'system:dictionary:data'" type="text" @click="onClickCheckBtn(scope)">字典数据</el-button>
+            <el-button v-permission="'system:dictionary:edit'" type="text" @click="onClickEditBtn(scope)">编辑</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
 
-    <div class="pagination">
-      <pagination 
-        v-show="total>0" 
-        :total="total" 
-        :page.sync="pageData.pageNumber" 
-        :limit.sync="pageData.pageSize" 
-        @pagination="onPageChange" 
+    <div class="layout__pagination">
+      <el-pagination
+        background
+        layout="prev, pager, next, total, jumper, slot"
+        :page-size="pageData.pageSize"
+        :current-page.sync="pageData.pageNumber"
+        :total="total"
+        @current-change="onPageChange"
       />
     </div>
   </div>
-
-  <el-dialog
-    :visible="isShowDialog"
-    :close-on-click-modal="false"
-    @close="onClickCloseBtn"
-    :title="isEdit ? '编辑数据字典' : '新增数据字典'"
-  >
-    <el-form 
-      :model="dialogForm" 
-      label-width="120px"
-      ref="dialogForm"
-      :rules="ruler"
-    >
-      <el-row>
-        <el-col :span="14">
-          <el-form-item label="字典名称：" prop="dicName">
-            <el-input v-model="dialogForm.dicName" />
-          </el-form-item>
-
-          <el-form-item label="状态：" prop="deleted">
-            <el-radio-group v-model="dialogForm.deleted">
-              <el-radio label="1">启用</el-radio>
-              <el-radio label="2">禁用</el-radio>
-            </el-radio-group>
-          </el-form-item>
-
-          <el-form-item>
-            <el-button type="primary" size="small" @click="onClickSaveBtn">确认</el-button>
-            <el-button size="small" @click="onClickCloseBtn">取消</el-button>
-          </el-form-item>
-        </el-col>
-      </el-row>
-      
-    </el-form>
-  </el-dialog>
-</div>
 </template>
 
 <script>
 export default {
-  data () {
+  data() {
     return {
-
-      formData: {
+      listFilter: {
         dicName: '',
         dicCode: '',
-        deleted: '',
+        deleted: ''
       },
-
-      copyData: {},
 
       pageData: {
-        pageSize: 5,
         pageNumber: 1,
+        pageSize: 10
       },
-
       total: 0,
 
       tableData: [],
-
-      isShowDialog: false,
-
-      dialogForm: {
-        id: '',
-        dicName: '',
-        dicCode: '',
-        deleted: ''
-      },
-
-      ruler: {
-        dicName: { required: true, message: '请输入', trigger: 'blur' },
-        deleted: { required: true, message: '请选择', trigger: 'change' }
-      },
-
-      isEdit: false
-
+      copyData: {}
     }
   },
 
-  created () {
-    this.getTableData();
+  created() {
+    this.getTableData()
   },
 
   methods: {
+    async getTableData() {
+      const res = await this.$api.getDictionaryList(Object.assign({}, this.listFilter, this.pageData), '', true)
 
-    onClearFormItem (obj, prop) {
-      obj[prop] = '';
+      this.tableData = res.records
+      // 保证点击翻页按钮时搜索条件的正确
+      this.copyData = this.$deepcopy(this.formData)
+      this.total = +res.total
     },
 
-    async onChangeStatus (val, ...ids) {
-      const res = await this.$post('dictionaryStatusChange', {
-        idList: ids,
-        deleted: val
-      });
-
-      if(res.returnCode === '1000') {
-        this.$message.success('修改成功');
-        this.getTableData();
-      } else {
-        return this.$message.error(res.message);
-      }
+    onSubmitForm(e) {
+      e.preventDefault()
+      this.pageData.pageNumber = 1
+      this.getTableData()
     },
 
-    onClickEditBtn ({ row }) {
-      this.isEdit = true;
-
-      this.dialogForm = {
-        id: row.id,
-        dicName: row.dicName,
-        dicCode: row.dicCode,
-        deleted: row.deleted
-      }
-
-      this.isShowDialog = true;
+    onPageChange(value) {
+      this.pageData.pageNumber = 1
+      this.formData = this.copyData
+      this.getTableData()
     },
 
-    async getTableData () {
-      const res = await this.$post('dictionaryList', Object.assign({}, this.formData, this.pageData));
-
-      if(res.returnCode === '1000') {
-        this.tableData = res.records;
-        this.total = +res.total;
-
-        this.copyData = this.$deepCopy(this.formData);
-      } else {
-        return this.$message.error(res.message);
-      }
-
-    },
-
-    onClickSearchBtn () {
-      this.pageData.pageNumber = 1;
-      this.getTableData();
-    },
-
-    onPageChange (val) {
-      this.pageData.pageNumber = val.page;
-      this.pageData.pageSize = val.limit;
-      this.formData = this.$deepCopy(this.copyData);
-
-      this.getTableData();
-    },
-
-    onClickAddBtn () {
-      this.isShowDialog = true;
-    },
-
-    onClickSaveBtn () {
-      this.$refs.dialogForm.validate(isValid => isValid && this.handleSaveAction());
-    },
-
-    async handleSaveAction () {
-      const res = await this.$post('dictionaryAdd', Object.assign({}, this.dialogForm));
-
-      if(res.returnCode === '1000') {
-        this.$message.success('操作成功');
-        this.onClickCloseBtn();
-
-        this.onClickSearchBtn();
-      } else {
-        return this.$message.error(res.message);
-      }
-    },
-
-    onClickCloseBtn () {
-      this.isShowDialog = false;
-
-      this.dialogForm = {
-        id: '',
+    onClickResetBtn() {
+      this.listFilter = {
         dicName: '',
         dicCode: '',
         deleted: ''
-      };
+      }
+      this.pageData.pageNumber = 1
+      this.getTableData()
+    },
 
-      this.$refs.dialogForm.resetFields();
+    onClickAddBtn() {
+      this.$router.push({ name: 'DictionaryAdd' })
+    },
+
+    async onChangeStatus(value, { row }) {
+      await this.$api.dictionaryStatusControl({
+        idList: [row.id],
+        deleted: value
+      })
+
+      this.$message.success('操作成功')
+      this.$set(row, 'deleted', value)
+    },
+
+    onClickEditBtn({ row: { id }}) {
+      this.$router.push({ name: 'DictionaryEdit', query: { id }})
+    },
+
+    onClickCheckBtn({ row: { id }}) {
+      this.$router.push({ name: 'DictionaryDataList', query: { id }})
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.system-dictionary-list {
-  .form{
-    padding: 20px;
-    background-color: #fff;
-    margin-bottom: 20px;
-    box-shadow: 0 0 1px 0 rgba(0, 0, 0, 0.1);
-    .line{
-      text-align: center;
-    }
-    .search_button_row{
-      text-align: right;
-    }
-  }
-
-  .table__container {
-    margin-top: 20px;
-    padding: 20px;
-    background: #fff;
-  }
-
-  .pagination{
-    text-align: right;
-  }
-}
 </style>

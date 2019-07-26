@@ -1,61 +1,105 @@
-// 恢复Vuex 相应模块里面的数据 fix: 刷新页面，vuex数据会丢失
-// const data = (sessionStorage.getItem('common') && JSON.parse(sessionStorage.getItem('common'))) || {}
-const data = JSON.parse(sessionStorage.getItem('user'))
+// import { login, logout, getInfo } from '@/api/user'
+import API from '@/utils/request'
+import { getToken, setToken, removeToken } from '@/utils/auth'
+import session from '@/utils/session'
+import { resetRouter } from '@/router'
+import md5 from 'md5'
 
-const user = {
-  state: {
-    userInfo: data && data.userInfo || '',
-    initPsdStatus: data && data.initPsdStatus || '',
+const result = session.get('user')
+
+const state = result || {
+  token: getToken(),
+  name: '',
+  avatar: '',
+  userInfo: {}
+}
+
+const mutations = {
+  SET_TOKEN: (state, token) => {
+    state.token = token
   },
-
-  mutations: {
-    SET_USERINFO: (state, val) => {
-      state.userInfo = val
-    },
-    SET_INIT_PSD_STATUE: (state, val) => {
-      state.initPsdStatus = val
-    },
+  SET_NAME: (state, name) => {
+    state.name = name
   },
-
-  actions: {
-    // 设置userInfo(登录和修改信息后)
-    setUserInfo({ commit }, userInfo) {
-      commit('SET_USERINFO', userInfo)
-    },
-    // 设置重置密码的状态
-    setInitPsdStatus({ commit }, status) {
-      commit('SET_INIT_PSD_STATUE', status)
-    },
-
-    // 登出
-    // LogOut({ commit }) {
-    //   commit('SET_USERINFO', '')
-    // },
-
-
-
-    // LogOut({ commit, state }) {
-    //   return new Promise((resolve, reject) => {
-    //     logout(state.token).then(() => {
-    //       commit('SET_TOKEN', '')
-    //       commit('SET_ROLES', [])
-    //       removeToken()
-    //       resolve()
-    //     }).catch(error => {
-    //       reject(error)
-    //     })
-    //   })
-    // },
-
-    // 前端 登出
-    // FedLogOut({ commit }) {
-    //   return new Promise(resolve => {
-    //     commit('SET_TOKEN', '')
-    //     removeToken()
-    //     resolve()
-    //   })
-    // }
+  SET_AVATAR: (state, avatar) => {
+    state.avatar = avatar
+  },
+  SET_USERINFO: (state, userInfo) => {
+    state.userInfo = userInfo
+  },
+  SET_PERMISSION: (state, permission) => {
+    state.permission = permission
   }
 }
 
-export default user
+const actions = {
+  // user login
+  login({ commit }, userInfo) {
+    const { username, password } = userInfo
+    return new Promise((resolve, reject) => {
+      API.login({ loginName: username.trim(), password: md5(password) }).then(response => {
+        const { token, permission, user } = response
+        commit('SET_TOKEN', token)
+        commit('SET_USERINFO', user)
+        commit('SET_PERMISSION', permission)
+        commit('SET_NAME', user.username)
+        setToken(token)
+        resolve()
+      }).catch(error => {
+        reject(error)
+      })
+    })
+  },
+
+  // get user info
+  getInfo({ commit, state }) {
+    return new Promise((resolve, reject) => {
+      API.getUserInfo(state.token).then(response => {
+        const { data } = response
+
+        if (!data) {
+          reject('Verification failed, please Login again.')
+        }
+
+        const { name, avatar } = data
+
+        commit('SET_NAME', name)
+        commit('SET_AVATAR', avatar)
+        resolve(data)
+      }).catch(error => {
+        reject(error)
+      })
+    })
+  },
+
+  // user logout
+  logout({ commit, state }) {
+    return new Promise((resolve, reject) => {
+      API.logout({ userId: state.userInfo.userId }).then(() => {
+        commit('SET_TOKEN', '')
+        removeToken()
+        resetRouter()
+        resolve()
+      }).catch(error => {
+        reject(error)
+      })
+    })
+  },
+
+  // remove token
+  resetToken({ commit }) {
+    return new Promise(resolve => {
+      commit('SET_TOKEN', '')
+      removeToken()
+      resolve()
+    })
+  }
+}
+
+export default {
+  namespaced: true,
+  state,
+  mutations,
+  actions
+}
+

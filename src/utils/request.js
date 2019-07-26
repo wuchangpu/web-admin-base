@@ -1,68 +1,36 @@
-import axios from 'axios'
-import { Message, MessageBox } from 'element-ui'
-import store from '../store'
+import Vue from 'vue'
+import Axios from 'axios'
+import store from '@/store'
 import { getToken } from '@/utils/auth'
-import { Host } from '@/config'
+import apiConf from '@/config/api'
 
-// 创建axios实例
-const service = axios.create({
-  // baseURL: process.env.BASE_API, // api 的 base_url
-  baseURL: 'http://10.0.0.48/admin',
-  timeout: 5000 // 请求超时时间
+const service = Axios.create({
+  baseURL: process.env.NODE_ENV === 'development' ? '/dev-api' : process.env.VUE_APP_API_URL,
+  headers: {
+    'content-type': 'application/json;charset=utf-8'
+  },
+  timeout: 30000
 })
 
-// request拦截器
+/* eslint-disable no-param-reassign */
 service.interceptors.request.use(
-  config => {
+  request => {
     if (store.getters.token) {
-      config.headers['X-Token'] = getToken() // 让每个请求携带自定义token 请根据实际情况自行修改
+      request.headers['token'] = `${getToken()}`
     }
-    return config
+    return request
   },
   error => {
-    // Do something with request error
-    console.log(error) // for debug
-    Promise.reject(error)
+    console.warn(error)
+    return Promise.reject(error)
   }
 )
 
-// response 拦截器
 service.interceptors.response.use(
-  response => {
-    /**
-     * code为非20000是抛错 可结合自己业务进行修改
-     */
-    const res = response.data
-    if (res.code !== 20000) {
-      Message({
-        message: res.message,
-        type: 'error',
-        duration: 5 * 1000
-      })
-
-      // 50008:非法的token; 50012:其他客户端登录了;  50014:Token 过期了;
-      if (res.code === 50008 || res.code === 50012 || res.code === 50014) {
-        MessageBox.confirm(
-          '你已被登出，可以取消继续留在该页面，或者重新登录',
-          '确定登出', {
-            confirmButtonText: '重新登录',
-            cancelButtonText: '取消',
-            type: 'warning'
-          }
-        ).then(() => {
-          store.dispatch('FedLogOut').then(() => {
-            location.reload() // 为了重新实例化vue-router对象 避免bug
-          })
-        })
-      }
-      return Promise.reject('error')
-    } else {
-      return response.data
-    }
-  },
+  response => response,
   error => {
-    console.log('err' + error) // for debug
-    Message({
+    console.warn('err' + error) // for debug
+    Vue.prototype.$message({
       message: error.message,
       type: 'error',
       duration: 5 * 1000
@@ -71,4 +39,54 @@ service.interceptors.response.use(
   }
 )
 
-export default service
+// 因为后端架构问题，无法在分页的接口中直接把数据封装到 dataInfo 中，由前端做判断
+function access(url, param, method, isList) {
+  param = param || {}
+  let ret = null
+  const upperMethod = method.toUpperCase()
+
+  /* eslint-disable no-underscore-dangle */
+  const __randNum = Math.random()
+
+  if (upperMethod === 'POST') {
+    ret = service.post(url, param, { params: { __randNum }})
+  } else if (upperMethod === 'PUT') {
+    ret = service.put(url, param, { params: { __randNum }})
+  } else if (upperMethod === 'DELETE') {
+    ret = service.delete(url, { params: { ...param, __randNum }})
+  } else {
+    ret = service.get(url, { params: { ...param, __randNum }})
+  }
+
+  return ret.then(res => {
+    const { data: resData } = res
+    if (resData.returnCode === '1000') {
+      if (isList) {
+        return resData
+      }
+      return resData.dataInfo
+    } else {
+      if (resData.returnCode === '401') {
+        store.dispatch('user/resetToken').then(() => {
+          location.reload()
+        })
+      } else {
+        Vue.prototype.$message({
+          message: resData.message || 'Error',
+          type: 'error',
+          duration: 5 * 1000
+        })
+      }
+    }
+    return Promise.reject(res)
+  })
+}
+
+// 根据 confit/api.js 配置往this上挂载对应的方法
+export default new function getAPI() {
+  const apiMap = apiConf
+  Object.keys(apiMap).forEach(key => {
+    const [url, method = 'post'] = apiMap[key]
+    this[key] = (params, str = '', isList) => access(url + str, params, method, isList)
+  })
+}()

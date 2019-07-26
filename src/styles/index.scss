@@ -3,6 +3,7 @@
 @import './transition.scss';
 @import './element-ui.scss';
 @import './sidebar.scss';
+
 body {
   height: 100%;
   -moz-osx-font-smoothing: grayscale;
@@ -30,19 +31,6 @@ html {
   box-sizing: inherit;
 }
 
-a,
-a:focus,
-a:hover {
-  cursor: pointer;
-  color: inherit;
-  outline: none;
-  text-decoration: none;
-}
-
-div:focus {
-  outline: none;
-}
-
 a:focus,
 a:active {
   outline: none;
@@ -56,12 +44,12 @@ a:hover {
   text-decoration: none;
 }
 
-.pointer{
-  cursor: pointer;
+div:focus {
+  outline: none;
 }
 
-.placeholder{
-  color: #C0C4CC;
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
 }
 
 .clearfix {
@@ -75,17 +63,77 @@ a:hover {
   }
 }
 
-//main-container全局样式
-.app-main {
-  min-height: 100%
-}
-
+// main-container global css
 .app-container {
-  // padding: 20px;
+  padding: 20px;
 }
 
-.ellipsis {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+// Layout 框的样式
+.layout__page {
+  .layout__title {
+    font-size: 26px;
+    margin-bottom: 20px;
+  }
+
+  .layout__sub-title {
+    font-size: 16px;
+    margin-bottom: 15px;
+  }
+
+  .layout__filter-form {
+    padding: 20px 0;
+  }
+
+  .layout__form {
+    margin: 0 auto;
+    max-width: 60%;
+  }
+
+  .layout__table {
+    margin-top: 20px;
+
+    .table__title {
+      line-height: 30px;
+    }
+  }
+
+  .layout__pagination {
+    margin-top: 20px;
+    text-align: right;
+  }
+}
+
+.el-input, .el-select {
+  min-width: 200px;
+  width: 300px;
+  max-width: 400px;
+}
+
+.el-form-item {
+  .el-input, .el-select {
+    width: 220px;
+  }
+
+  .el-date-editor--daterange {
+    width: 100%;
+  }
+}
+
+.el-input.el-pagination__editor {
+  min-width: 50px;
+}
+
+.el-button {
+  min-width: 100px;
+
+  &.el-button--text {
+    min-width: 50px;
+  }
+}
+
+.el-picker-panel__body-wrapper {
+  .el-input {
+    min-width: auto;
+    width: auto;
+  }
 }

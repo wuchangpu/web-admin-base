@@ -1,22 +1,23 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import app from './modules/app'
-import user from './modules/user'
-import permission from './modules/permission'
 import getters from './getters'
-// 把vuex数据缓存到sessionStorage
-import plugins from './sessionPlugin'
+import app from './modules/app'
+import settings from './modules/settings'
+import user from './modules/user'
+import plugins from './plugins'
+import permission from './permission'
 
 Vue.use(Vuex)
 
 const store = new Vuex.Store({
-  plugins,
-  getters,
   modules: {
     app,
+    settings,
     user,
-    permission,
+    permission
   },
+  getters,
+  plugins
 })
 
 export default store

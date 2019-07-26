@@ -1,91 +1,66 @@
-import Vue from "vue";
-import Router from "vue-router";
+import Vue from 'vue'
+import Router from 'vue-router'
 
-// in development-env not use lazy-loading, because lazy-loading too many pages will cause webpack hot update too slow. so only in production use lazy-loading;
+Vue.use(Router)
 
-Vue.use(Router);
-
-/* Layout */
-import Layout from "../views/layout/Layout";
-
-/* modules */
-import commonRouters from './modules/commonRouters'
-import creatorRouters from './modules/creatorRouters'
-import projectRouters from './modules/projectRouters'
+import SystemRoutes from './modules/SystemRoutes'
 
 /**
-* hidden: true                   是否显示在侧边栏菜单（默认为false）
-*
-* alwaysShow: true               当你一个路由下面的 children 声明的路由大于1个时，自动会变成嵌套的模式
-*                                只有一个时，会将那个子路由当做根路由显示在侧边栏
-*                                如果设置为true，将始终显示根菜单路由，无论是否有子路由（默认为false）
-*
-* redirect: noredirect           如果设置 `redirect:noredirect` ，则点击面包屑不会重定向跳转
-*
-* name:'router-name'             用于<keep-alive> (必须设置!!!不设置则使用<keep-alive>时会出现各种问题)
-*
-* path: 'path-name'              不支持'a/b'或者'a:1' 的写法
-*
-* meta : {
-    title: 'title'               显示在侧边栏和面包屑的名称
-    icon: 'svg-name'             侧边栏icon的svg-name
-    breadcrumb: false            是否显示在面包屑（默认为true）
+ * Note: sub-menu only appear when route children.length >= 1
+ * Detail see: https://panjiachen.github.io/vue-element-admin-site/guide/essentials/router-and-nav.html
+ *
+ * hidden: true                   if set true, item will not show in the sidebar(default is false)
+ * alwaysShow: true               if set true, will always show the root menu
+ *                                if not set alwaysShow, when item has more than one children route,
+ *                                it will becomes nested mode, otherwise not show the root menu
+ * redirect: noRedirect           if set noRedirect will no redirect in the breadcrumb
+ * name:'router-name'             the name is used by <keep-alive> (must set!!!)
+ * meta : {
+    roles: ['admin','editor']    control the page roles (you can set multiple roles)
+    title: 'title'               the name show in sidebar and breadcrumb (recommend set)
+    icon: 'svg-name'             the icon show in the sidebar
+    breadcrumb: false            if set false, the item will hidden in breadcrumb(default is true)
+    activeMenu: '/example/list'  if set path, the sidebar will highlight the path you set
   }
-**/
-export const constantRouterMap = [
-  // login
+ */
+
+/**
+ * constantRoutes
+ * a base page that does not have permission requirements
+ * all roles can be accessed
+ */
+export const constantRoutes = [
   {
-    path: "/login",
-    component: () => import("@/views/login/index"),
+    path: '/login',
+    component: () => import('@/views/login/index'),
     hidden: true
-  },
+  }
+]
 
-  commonRouters,
-
-  {
-    path: '/addmenu',
-    component: () => import('@/views/addmenu'),
-  },
-
-  // 404
+export const asyncRoutes = [
+  SystemRoutes,
   {
     path: '/404',
-    component: () => import ('@/views/404'),
+    component: () => import('@/views/404'),
     hidden: true
   },
-  { path: "/", redirect: "/login", hidden: true },
-  // 菜单管理
-  // {
-  //   path: "/menu",
-  //   component: Layout,
-  //   children: [
-  //     {
-  //       path: "index",
-  //       name: "Menu",
-  //       meta: { title: "菜单管理", icon: "permission" },
-  //       component: () => import("@/views/menu/index")
-  //     }
-  //   ]
-  // }
 
-  // { path: '*', redirect: '/404', hidden: true }
-];
+  // 404 page must be placed at the end !!!
+  { path: '*', redirect: '/404', hidden: true }
+]
 
-export const asyncRouterMap = [
-  
-  // permissionRouters,
-  // systemRouters,
-
-  creatorRouters,
-  projectRouters,
-
-  { path: "/", redirect: "/login", hidden: true },
-  { path: "*", redirect: "/404", hidden: true }
-  
-];
-
-export default new Router({
-  // mode: 'history', //后端支持可开
+const createRouter = () => new Router({
+  // mode: 'history', // require service support
   scrollBehavior: () => ({ y: 0 }),
-  routes: constantRouterMap
-});
+  routes: constantRoutes
+})
+
+const router = createRouter()
+
+// Detail see: https://github.com/vuejs/vue-router/issues/1234#issuecomment-357941465
+export function resetRouter() {
+  const newRouter = createRouter()
+  router.matcher = newRouter.matcher // reset router
+}
+
+export default router

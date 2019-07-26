@@ -4,36 +4,14 @@
  * Breadcrumb和Hamburger 已在layout局部引入，如需注册全局请删除相应局部
  */
 
-
-import Pagination from './Pagination'
-import PermissionTree from './Tree/PermissionTree'
-import CountTo from './CountTo'
-import DatePicker from './DatePicker'
-import Tinymce from './Tinymce'
 import FileUpload from './FileUpload'
-import Echarts from './Echarts'
-import SpecifiedObject from './SpecifiedObject'
-import FilePreview from './FilePreview'
-import CheckInMap from './GaodeMap/CheckInMap'
-import Annex from './Annex'
 
 const components = {
-  Pagination,
-  PermissionTree,
-  CountTo,
-  DatePicker,
-  Tinymce,
-  FileUpload,
-  Echarts,
-  SpecifiedObject,
-  FilePreview,
-  CheckInMap,
-  Annex,
+  FileUpload
 }
 
-
 function install(Vue) {
-  if (install.installed) return;
+  if (install.installed) return
 
   install.installed = true
 
@@ -42,8 +20,6 @@ function install(Vue) {
       Vue.component(key, components[key])
     }
   }
-
-  
 }
 
 export default install

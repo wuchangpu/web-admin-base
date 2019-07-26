@@ -1,42 +1,83 @@
 import router from './router'
 import store from './store'
-import NProgress from 'nprogress' // Progress 进度条
-import 'nprogress/nprogress.css' // Progress 进度条样式
+import { Message } from 'element-ui'
+import NProgress from 'nprogress' // progress bar
+import 'nprogress/nprogress.css' // progress bar style
+import { getToken } from '@/utils/auth' // get token from cookie
+import getPageTitle from '@/utils/get-page-title'
 
-let addRoutesCompeleted = false;
-const whiteList = ['/login'] // 不重定向白名单
-router.beforeEach((to, from, next) => {
+NProgress.configure({ showSpinner: false }) // NProgress Configuration
+
+const whiteList = ['/login'] // no redirect whitelist
+
+let first = false
+
+function setRoutesFunc(next, to) {
+  const lastPath = sessionStorage.getItem('lastPath')
+  if (lastPath && (lastPath === to.path) && !first) {
+    store.dispatch('permission/ROUTER_FILTER', store.state.app.permission)
+      .then(() => {
+        router.addRoutes(store.state.permission.addRouters)
+        first = true
+        next({ ...to, replace: true })
+      })
+      .catch(() => {})
+  } else {
+    next()
+  }
+  sessionStorage.setItem('lastPath', to.path)
+}
+
+router.beforeEach(async(to, from, next) => {
+  // start progress bar
   NProgress.start()
-  if (store.state.user.userInfo.token) {
+
+  // set page title
+  document.title = getPageTitle(to.meta.title)
+
+  // determine whether the user has logged in
+  const hasToken = getToken()
+
+  if (hasToken) {
     if (to.path === '/login') {
-      next({ path: '/' })
-      NProgress.done() // if current page is dashboard will not trigger	afterEach hook, so manually handle it
+      // if is logged in, redirect to the home page
+      next()
+      NProgress.done()
     } else {
-      let lastPath = sessionStorage.getItem('lastPath');
-      if(lastPath && lastPath === to.path && !addRoutesCompeleted){
-        store.dispatch('GenerateRoutes', store.state.permission.resMenu).then(() => {
-          console.log('permission-router',router)
-          router.addRoutes(store.state.permission.addRouters);
-          addRoutesCompeleted = true; // next(to)会再次执行一次beforeEach钩子，所以加此判断，不然会死循环
-          next({ ...to, replace: true }) // hack方法 确保addRoutes已完成
-        }).catch(err => {
-          console.log(err);
-        });
+      const hasGetUserInfo = store.getters.name
+      if (hasGetUserInfo) {
+        setRoutesFunc(next, to)
       } else {
-        next();
+        try {
+          // get user info
+          await store.dispatch('user/getInfo')
+          setRoutesFunc(next, to)
+        } catch (error) {
+          // remove token and go to login page to re-login
+          await store.dispatch('user/resetToken')
+          Message.error(error || 'Has Error')
+          // next(`/login?redirect=${to.path}`)
+          next(`/login`)
+          NProgress.done()
+        }
       }
-      sessionStorage.setItem('lastPath', to.path);
     }
   } else {
+    /* has no token*/
+
     if (whiteList.indexOf(to.path) !== -1) {
+      // in the free login whitelist, go directly
       next()
     } else {
-      next(`/login?redirect=${to.path}`) // 否则全部重定向到登录页
+      // other pages that do not have permission to access are redirected to the login page.
+      // next(`/login?redirect=${to.path}`)
+      next(`/login`)
       NProgress.done()
     }
   }
 })
 
 router.afterEach(() => {
-  NProgress.done() // 结束Progress
+  // finish progress bar
+  NProgress.done()
 })
