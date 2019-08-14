@@ -89,8 +89,8 @@ export default {
         username: { required: true, message: '请输入', trigger: 'blur' },
         mobile: [{ required: true, message: '请输入', trigger: 'blur' }, { validator: validateMobile, trigger: 'blur' }],
         email: [{ required: true, message: '请输入', trigger: 'blur' }, { validator: validateEmail, trigger: 'blur' }],
-        password: [{ required: true, message: '请输入', trigger: 'blur' }, { validator: validatePassword, trigger: 'blur' }],
-        repeatPassword: [{ required: true, message: '请输入', trigger: 'blur' }, { validator: validatePassword, trigger: 'blur' }],
+        password: _this.isEdit ? null : [{ required: true, message: '请输入', trigger: 'blur' }, { validator: validatePassword, trigger: 'blur' }],
+        repeatPassword: _this.isEdit ? null: [{ required: true, message: '请输入', trigger: 'blur' }, { validator: validatePassword, trigger: 'blur' }],
         status: [{ required: true, message: '请选择', trigger: 'change' }],
         roleIdList: [{ required: true, message: '请选择', trigger: 'change' }, { validator: validateArray, trigger: 'change' }],
         orgIdList: { required: true, message: '请选择', trigger: 'change' }

@@ -208,7 +208,7 @@ export default {
       this.$message.success('操作成功')
       this.listFilter = this.copyData
 
-      if ((this.tableData.length === 0) && (this.pageData.pageNumber < 2)) {
+      if ((this.tableData.length === 0) && (this.pageData.pageNumber > 2)) {
         this.pageData.pageNumber -= 1
       }
       this.getTableData()

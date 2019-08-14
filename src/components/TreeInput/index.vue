@@ -59,16 +59,26 @@ export default {
 
   watch: {
     value() {
-      const item = this.$refs.tree.getNode(this.value)
-      if (item) {
-        this.orgName = item.data[this.defaultProps.label]
-      } else {
-        this.orgName = ''
-      }
+      this.$nextTick(() => this.calculateOrgName())
+    },
+
+    data() {
+      this.$nextTick(() => this.calculateOrgName())
     }
   },
   
   methods: {
+    calculateOrgName() {
+      if (this.$refs.tree) {
+        const item = this.$refs.tree.getNode(this.value)
+        if (item) {
+          this.orgName = item.data[this.defaultProps.label]
+        } else {
+          this.orgName = ''
+        }
+      }
+    },
+
     handleNodeClick(data) {
       this.orgName = data[this.defaultProps.label]
 

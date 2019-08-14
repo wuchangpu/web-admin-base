@@ -115,8 +115,8 @@ export default {
       this.total = +res.total
     },
 
-    onPageChange() {
-      this.pageData.pageNumber = 1
+    onPageChange(val) {
+      this.pageData.pageNumber = val
       this.formData = this.copyData
       this.getTableData()
     },
@@ -162,7 +162,7 @@ export default {
 
       this.$message.success('操作成功')
 
-      if ((this.tableData.length === 0) && (this.pageData.pageNumber < 2)) {
+      if ((this.tableData.length === 0) && (this.pageData.pageNumber > 2)) {
         this.pageData.pageNumber -= 1
       }
 
